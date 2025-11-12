@@ -6,8 +6,14 @@ const bcrypt = require('bcrypt');
 const { GoogleGenAI } = require('@google/genai');
 
 // Initialize Google GenAI client
-// NOTE: Ensure the GEMINI_API_KEY environment variable is set.
-const ai = new GoogleGenAI({});
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+if (!GEMINI_API_KEY) {
+    console.error("FATAL: GEMINI_API_KEY environment variable is not set. Chatbot functionality will be disabled.");
+    // In a real deployment, you might exit here if the key is critical.
+}
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
@@ -105,6 +111,11 @@ app.post('/api/chat', async (req, res) => {
 
     if (!message) {
         return res.status(400).json({ message: 'Message content is required.' });
+    }
+
+    if (!chat) {
+        console.warn('Chatbot not initialized due to missing API key.');
+        return res.status(503).json({ message: 'AI service is currently unavailable.' });
     }
 
     try {
