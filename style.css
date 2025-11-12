@@ -264,19 +264,37 @@ body.modal-open .floating-buttons {
 }
 
 .rec-card {
+    /* Base styling for tile format */
     background-color: var(--secondary-color);
     color: var(--text-color);
     padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex: 1 1 300px; /* Flexible width for responsiveness */
+    border-radius: 15px; /* Slightly rounder corners */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    flex: 1 1 300px;
     min-width: 250px;
-    transition: transform 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 2px dashed var(--primary-color); /* Doodle style border */
+    text-align: left;
+    cursor: pointer;
+    
+    /* Doodle background effect */
+    background-image: radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.5) 1px, transparent 0),
+                      radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.5) 1px, transparent 0);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
 }
 
 .rec-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    background-color: #f5e5d8; /* Slight hover color change */
+}
+
+body.dark-mode .rec-card {
+    background-color: #3c4043;
+    border-color: var(--primary-color);
+    background-image: radial-gradient(circle at 10% 90%, rgba(255, 255, 255, 0.1) 1px, transparent 0),
+                      radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.1) 1px, transparent 0);
 }
 
 /* Exercise Activity Styles */
@@ -298,16 +316,19 @@ body.modal-open .floating-buttons {
 }
 
 /* Custom Scrollbar for Exercise List */
-.exercise-list-container::-webkit-scrollbar {
+.exercise-list-container::-webkit-scrollbar,
+.game-tile-list::-webkit-scrollbar {
     width: 8px;
 }
 
-.exercise-list-container::-webkit-scrollbar-track {
+.exercise-list-container::-webkit-scrollbar-track,
+.game-tile-list::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
 }
 
-.exercise-list-container::-webkit-scrollbar-thumb {
+.exercise-list-container::-webkit-scrollbar-thumb,
+.game-tile-list::-webkit-scrollbar-thumb {
     background: var(--primary-color);
     border-radius: 10px;
 }
@@ -316,18 +337,31 @@ body.modal-open .floating-buttons {
     background: #69b0d9; /* Darker primary color */
 }
 
-body.dark-mode .exercise-list-container::-webkit-scrollbar-track {
+body.dark-mode .exercise-list-container::-webkit-scrollbar-track,
+body.dark-mode .game-tile-list::-webkit-scrollbar-track {
     background: #3c4043;
 }
 
-body.dark-mode .exercise-list-container::-webkit-scrollbar-thumb {
+body.dark-mode .exercise-list-container::-webkit-scrollbar-thumb,
+body.dark-mode .game-tile-list::-webkit-scrollbar-thumb {
     background: var(--primary-color);
 }
 
-/* Vertical Scroll Controls */
+/* Vertical Scroll Controls for Exercises */
 .exercise-scroll-controls {
     position: absolute;
     top: 50px; /* Below Mindful Moments header */
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 10;
+}
+
+/* Vertical Scroll Controls for Music */
+.music-scroll-controls {
+    position: absolute;
+    top: 100px; /* Adjusted position relative to music player controls */
     right: 10px;
     display: flex;
     flex-direction: column;
@@ -358,7 +392,8 @@ body.dark-mode .scroll-nav-btn {
     box-shadow: 0 2px 4px rgba(255,255,255,0.1);
 }
 
-.exercise-activity {
+.exercise-activity,
+.music-activity {
     background-color: var(--bg-color);
     padding: 20px;
     border-radius: 15px;
@@ -421,13 +456,15 @@ body.dark-mode .scroll-nav-btn {
 }
 
 /* Dark Mode Adjustments for Exercises */
-body.dark-mode .exercise-activity {
+body.dark-mode .exercise-activity,
+body.dark-mode .music-activity {
     background-color: var(--surface-color);
     box-shadow: 0 2px 5px rgba(255,255,255,0.1);
     border-left-color: var(--primary-color);
 }
 
-body.dark-mode .exercise-activity button {
+body.dark-mode .exercise-activity button,
+body.dark-mode .music-activity button {
     background-color: var(--accent-color);
     color: #121212; /* Dark text on bright button */
 }
@@ -452,6 +489,33 @@ body.dark-mode .meditation-controls input[type="number"] {
     padding-left: 0;
 }
 
+/* Music Track List Scrollbar */
+#track-list-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#track-list-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#track-list-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+}
+
+#track-list-container::-webkit-scrollbar-thumb:hover {
+    background: #69b0d9; /* Darker primary color */
+}
+
+body.dark-mode #track-list-container::-webkit-scrollbar-track {
+    background: #3c4043;
+}
+
+body.dark-mode #track-list-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+}
+
 /* Dashboard Styles */
 .dashboard-grid {
     display: grid;
@@ -464,13 +528,39 @@ body.dark-mode .meditation-controls input[type="number"] {
         grid-template-columns: 1fr 1fr;
         grid-template-areas:
             "mascot summary"
+            "tasks-to-do high-scores"
             "chart chart"
             "badges badges";
     }
     .mascot-area { grid-area: mascot; }
     .progress-summary { grid-area: summary; }
+    .tasks-to-do-area { grid-area: tasks-to-do; } /* New grid area */
     .progress-chart-area { grid-area: chart; }
+    .high-scores-area { grid-area: high-scores; }
     .badge-area { grid-area: badges; }
+}
+
+.high-scores-area ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+    text-align: left;
+}
+
+.high-scores-area li {
+    padding: 5px 0;
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.high-scores-area li:last-child {
+    border-bottom: none;
+}
+
+body.dark-mode .high-scores-area li {
+    border-bottom-color: #3c4043;
 }
 
 .mascot-area {
@@ -493,14 +583,14 @@ body.dark-mode .meditation-controls input[type="number"] {
     color: var(--text-color);
 }
 
-.progress-summary, .progress-chart-area, .badge-area {
+.progress-summary, .progress-chart-area, .badge-area, .high-scores-area, .tasks-to-do-area {
     padding: 20px;
     background-color: var(--bg-color);
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-.progress-summary h3, .badge-area h3 {
+.progress-summary h3, .badge-area h3, .high-scores-area h3 {
     color: var(--primary-color);
     margin-top: 0;
 }
@@ -568,10 +658,11 @@ body.dark-mode .meditation-controls input[type="number"] {
 body.dark-mode .mascot-area {
     background-color: #3c4043;
 }
-
+ 
 body.dark-mode .progress-summary,
 body.dark-mode .progress-chart-area,
-body.dark-mode .badge-area {
+body.dark-mode .badge-area,
+body.dark-mode .high-scores-area {
     background-color: var(--surface-color);
 }
 
@@ -687,6 +778,44 @@ body.dark-mode .stat-label {
     font-style: italic;
 }
 
+/* Dashboard Task List Styles */
+#pending-tasks-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#pending-tasks-container li {
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--secondary-color);
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+#pending-tasks-container li:last-child {
+    border-bottom: none;
+}
+
+#pending-tasks-container .task-time {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+body.dark-mode #pending-tasks-container li {
+    border-bottom-color: #3c4043;
+}
+
+body.dark-mode .tasks-to-do-area {
+    background-color: var(--surface-color);
+}
+
+.empty-state-dashboard {
+    color: #999;
+    font-style: italic;
+    padding: 10px;
+}
+
 /* Dark Mode Adjustments for Tasks */
 body.dark-mode .task-item {
     background-color: #3c4043;
@@ -761,6 +890,8 @@ body.dark-mode .task-input-area input {
     border-radius: 15px;
     width: 80%;
     max-width: 500px;
+    max-height: 80vh; /* Limit height to 80% of viewport height */
+    overflow-y: auto; /* Allow scrolling if content exceeds max-height */
     position: relative;
     display: flex; /* Make modal-content a flex container */
     flex-direction: column;
@@ -1890,7 +2021,7 @@ body.dark-mode .focus-area {
 }
 
 .hero-content h2 {
-    font-size: 2.5rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
 }
@@ -1935,7 +2066,7 @@ body.dark-mode .focus-area {
 
 .home-card {
     background-color: var(--bg-color);
-    padding: 20px;
+    padding: 15px; /* Reduced padding */
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transition: transform 0.3s, box-shadow 0.3s;

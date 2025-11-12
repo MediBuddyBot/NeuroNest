@@ -13,30 +13,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const supportBtn = document.getElementById('support-btn');
 
     const suggestedActivities = {
-        1: { // Anxious
-            exercises: ["Try a 2-minute deep breathing exercise.", "Let's do a quick guided meditation for calm."],
-            games: ["Play the 'Zen Garden' game to relax.", "Try a slow-paced puzzle game."],
-            content: ["Read a short, calming story.", "Listen to some soothing nature sounds."]
+        // Mood IDs: 1=Anxious, 2=Sad, 3=Neutral, 4=Happy, 5=Excited
+        1: { // Anxious: Needs calming, focus, and grounding
+            game: { name: "Soothing Doodle Pad", id: "soothing" },
+            music: { name: "Soothing Melodies", id: "music/SOOTHING.mp3" },
+            exercise: { name: "2-Minute Deep Breathing", id: "breathing" }
         },
-        2: { // Sad
-            exercises: ["A gentle stretching exercise might help.", "Let's try a mindful listening activity."],
-            games: ["How about a creative coloring game?", "Let's build something in the 'Block Builder' game."],
-            content: ["Watch a funny, short animation.", "Listen to an uplifting song."]
+        2: { // Sad: Needs gentle uplift and distraction
+            game: { name: "Memory Match", id: "memory" },
+            music: { name: "Focus Flow", id: "music/FOCUS.mp3" },
+            exercise: { name: "Quick Stretch Break", id: "stretch" }
         },
-        3: { // Neutral
-            exercises: ["A great time to try a new yoga pose!", "Let's do a quick focus exercise."],
-            games: ["Challenge yourself with a memory game.", "Try to beat your high score in 'Task Runner'."],
-            content: ["Learn a fun new fact of the day.", "Explore a new topic in the learning center."]
+        3: { // Neutral: Needs engagement and focus
+            game: { name: "Word Builder", id: "wordBuilder" },
+            music: { name: "Focus Flow", id: "music/FOCUS.mp3" },
+            exercise: { name: "5-Minute Guided Meditation", id: "meditation" }
         },
-        4: { // Happy
-            exercises: ["Let's do a fun dance-along video!", "Channel that energy with a quick workout."],
-            games: ["Try a fast-paced action game!", "Let's play a collaborative game with a friend."],
-            content: ["Create your own story in the story builder.", "Share your happiness with a friend or family member."]
+        4: { // Happy: Needs energy channeling and fun
+            game: { name: "Whack-a-Mole", id: "whackAMole" },
+            music: { name: "Uplifting Energy", id: "music/ENERGY.mp3" },
+            exercise: { name: "Quick Stretch Break", id: "stretch" }
         },
-        5: { // Excited
-            exercises: ["A high-energy workout is perfect right now!", "Let's try some jumping jacks to celebrate!"],
-            games: ["Set a new record in our fastest game!", "Compete in the daily challenge!"],
-            content: ["Write down what you're excited about!", "Listen to some energetic, happy music."]
+        5: { // Excited: Needs focus and grounding of high energy
+            game: { name: "Focus Quest", id: "focusQuest" },
+            music: { name: "Uplifting Energy", id: "music/ENERGY.mp3" },
+            exercise: { name: "Tapping Techniques", id: "tapping" }
         }
     };
 
@@ -213,6 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="mood-emoji" data-mood="5">😄</div>
                         </div>
                     </div>
+                    
+                    <div id="suggested-activities" class="home-section recommendation-section"></div>
 
                     <div class="home-grid">
                         <div class="home-card game-of-the-day">
@@ -228,7 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </ul>
                         </div>
                     </div>
-                    <div id="suggested-activities"></div>
                 </div>
             `;
         },
@@ -296,11 +298,25 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
+                    <div class="tasks-to-do-area">
+                        <h3>Tasks To Do</h3>
+                        <div id="pending-tasks-container">
+                            <!-- Pending tasks will be rendered here -->
+                            <p>Loading tasks...</p>
+                        </div>
+                    </div>
+
                     <div class="progress-chart-area">
                         <h3>Usage History (Last 7 Days)</h3>
                         <canvas id="usage-chart"></canvas>
                     </div>
 
+                    <div class="high-scores-area">
+                        <h3>High Scores!</h3>
+                        <div id="high-scores-container">
+                            <!-- High scores will be rendered here -->
+                        </div>
+                    </div>
                     <div class="badge-area">
                         <div class="badge-header">
                             <h3>Badges Won (<span id="badge-count">0</span>)</h3>
@@ -331,61 +347,139 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function initializeAccountTab() {
-        const authToggleModalBtn = document.getElementById('auth-toggle-modal-btn');
-        const profileBtn = document.getElementById('profile-btn');
-        
-        let isRegisterMode = false;
-        let isParentLoginMode = false; // New state variable
+    let isRegisterMode = false;
+    let isParentLoginMode = false; // New state variable
 
-        const authModalContent = (isInitialPrompt = false) => `
-            <div class="auth-modal-content">
-                ${isInitialPrompt ? '<h3>Welcome to NeuroNest!</h3><p>Please log in or register to save your progress.</p>' : ''}
-                
-                <div class="auth-tabs">
-                    <button class="auth-tab-btn ${!isParentLoginMode ? 'active' : ''}" data-mode="child">Child's Login</button>
-                    <button class="auth-tab-btn ${isParentLoginMode ? 'active' : ''}" data-mode="parent">Parents Login</button>
+    const authModalContent = (isInitialPrompt = false) => `
+        <div class="auth-modal-content">
+            ${isInitialPrompt ? '<h3>Welcome to NeuroNest!</h3><p>Please log in or register to save your progress.</p>' : ''}
+            
+            <div class="auth-tabs">
+                <button class="auth-tab-btn ${!isParentLoginMode ? 'active' : ''}" data-mode="child">Child's Login</button>
+                <button class="auth-tab-btn ${isParentLoginMode ? 'active' : ''}" data-mode="parent">Parents Login</button>
+            </div>
+
+            ${isParentLoginMode ? `
+                <div class="parent-login-area">
+                    <h2>Parents Login</h2>
+                    <p class="coming-soon-message">
+                        Coming Soon! Here's what's next in the Parents App UI:
+                    </p>
+                    <ul class="parent-features-list">
+                        <li>> LOGIN PAGE FOR PARENTS</li>
+                        <li>> LINK CHILD'S ACCOUNT</li>
+                        <li>> THE ACTIVITY WILL BE DISPLAYED</li>
+                        <li>> LOCATION HISTORY</li>
+                        <li>> CURRENT LOCATION</li>
+                        <li>> USAGE TIME</li>
+                    </ul>
                 </div>
+            ` : `
+                <div class="child-login-area">
+                    <h2>${isRegisterMode ? 'Register' : 'Login'}</h2>
+                    <form id="auth-form-modal">
+                        <input type="text" id="auth-username-modal" placeholder="Username" required>
+                        <input type="password" id="auth-password-modal" placeholder="Password" required>
+                        ${!isRegisterMode ? `
+                            <div style="display: flex; align-items: center; margin-top: 10px;">
+                                <input type="checkbox" id="remind-me-checkbox" style="margin-right: 5px;">
+                                <label for="remind-me-checkbox" style="font-size: 0.9rem;">Remind me (Keep me logged in)</label>
+                            </div>
+                        ` : ''}
+                        <button type="submit" id="auth-submit-modal-btn" style="margin-top: 15px;">${isRegisterMode ? 'Register' : 'Login'}</button>
+                    </form>
+                    <p id="auth-message-modal" style="color: red; margin-top: 10px;"></p>
+                    <button id="toggle-auth-mode-modal" style="margin-top: 10px; background: none; border: none; color: var(--primary-color); cursor: pointer;">
+                        Switch to ${isRegisterMode ? 'Login' : 'Register'}
+                    </button>
+                </div>
+            `}
+        </div>
+    `;
 
-                ${isParentLoginMode ? `
-                    <div class="parent-login-area">
-                        <h2>Parents Login</h2>
-                        <p class="coming-soon-message">
-                            Coming Soon! Here's what's next in the Parents App UI:
-                        </p>
-                        <ul class="parent-features-list">
-                            <li>> LOGIN PAGE FOR PARENTS</li>
-                            <li>> LINK CHILD'S ACCOUNT</li>
-                            <li>> THE ACTIVITY WILL BE DISPLAYED</li>
-                            <li>> LOCATION HISTORY</li>
-                            <li>> CURRENT LOCATION</li>
-                            <li>> USAGE TIME</li>
-                        </ul>
-                    </div>
-                ` : `
-                    <div class="child-login-area">
-                        <h2>${isRegisterMode ? 'Register' : 'Login'}</h2>
-                        <form id="auth-form-modal">
-                            <input type="text" id="auth-username-modal" placeholder="Username" required>
-                            <input type="password" id="auth-password-modal" placeholder="Password" required>
-                            ${!isRegisterMode ? `
-                                <div style="display: flex; align-items: center; margin-top: 10px;">
-                                    <input type="checkbox" id="remind-me-checkbox" style="margin-right: 5px;">
-                                    <label for="remind-me-checkbox" style="font-size: 0.9rem;">Remind me (Keep me logged in)</label>
-                                </div>
-                            ` : ''}
-                            <button type="submit" id="auth-submit-modal-btn" style="margin-top: 15px;">${isRegisterMode ? 'Register' : 'Login'}</button>
-                        </form>
-                        <p id="auth-message-modal" style="color: red; margin-top: 10px;"></p>
-                        <button id="toggle-auth-mode-modal" style="margin-top: 10px; background: none; border: none; color: var(--primary-color); cursor: pointer;">
-                            Switch to ${isRegisterMode ? 'Login' : 'Register'}
-                        </button>
-                    </div>
-                `}
+    function handleLogout() {
+        isAuthenticated = false;
+        currentUsername = null;
+        localStorage.removeItem('neuroNestUser');
+        updateAuthUI();
+        closeModal();
+        // No longer redirect to home; stay on the current tab
+    }
+
+    function openProfileModal() {
+        const content = `
+            <div class="profile-modal-content">
+                <h2>Welcome, ${currentUsername}!</h2>
+                <p>You are currently logged in.</p>
+                <button id="logout-modal-btn" class="stop-activity-btn">Logout</button>
             </div>
         `;
-
+        openModal(content);
+        document.getElementById('logout-modal-btn').addEventListener('click', handleLogout);
     }
+
+    function toggleAuthMode() {
+        isRegisterMode = !isRegisterMode;
+        openAuthModal(); // Re-render modal content
+    }
+
+    async function handleAuthSubmit(e) {
+        e.preventDefault();
+        
+        // Only proceed if we are in Child Login mode
+        if (isParentLoginMode) return;
+
+        const authMessage = document.getElementById('auth-message-modal');
+        authMessage.textContent = '';
+
+        const username = document.getElementById('auth-username-modal').value;
+        const password = document.getElementById('auth-password-modal').value;
+        const endpoint = isRegisterMode ? '/api/register' : '/api/login';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                authMessage.style.color = 'green';
+                authMessage.textContent = data.message;
+                
+                if (!isRegisterMode) {
+                    // Successful Login
+                    isAuthenticated = true;
+                    currentUsername = username;
+                    
+                    const remindMeCheckbox = document.getElementById('remind-me-checkbox');
+                    const isPersistent = remindMeCheckbox ? remindMeCheckbox.checked : false;
+
+                    localStorage.setItem('neuroNestUser', JSON.stringify({ username, persistent: isPersistent }));
+                    
+                    updateAuthUI();
+                    closeModal();
+                    // No longer redirect to home; stay on the current tab
+                } else {
+                    // Successful Registration: switch to login mode
+                    isRegisterMode = false;
+                    openAuthModal();
+                }
+            } else {
+                authMessage.style.color = 'red';
+                authMessage.textContent = data.message || 'An error occurred.';
+            }
+        } catch (error) {
+            authMessage.style.color = 'red';
+            authMessage.textContent = 'Network error or server unreachable.';
+            console.error('Auth error:', error);
+        }
+    }
+
     function openAuthModal(isInitialPrompt = false) {
         openModal(authModalContent(isInitialPrompt));
         
@@ -403,89 +497,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 openAuthModal(isInitialPrompt); // Re-render modal content
             });
         });
+    }
 
-        function toggleAuthMode() {
-            isRegisterMode = !isRegisterMode;
-            openAuthModal(); // Re-render modal content
-        }
-
-        async function handleAuthSubmit(e) {
-            e.preventDefault();
-            
-            // Only proceed if we are in Child Login mode
-            if (isParentLoginMode) return;
-
-            const authMessage = document.getElementById('auth-message-modal');
-            authMessage.textContent = '';
-
-            const username = document.getElementById('auth-username-modal').value;
-            const password = document.getElementById('auth-password-modal').value;
-            const endpoint = isRegisterMode ? '/api/register' : '/api/login';
-
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    authMessage.style.color = 'green';
-                    authMessage.textContent = data.message;
-                    
-                    if (!isRegisterMode) {
-                        // Successful Login
-                        isAuthenticated = true;
-                        currentUsername = username;
-                        
-                        const remindMeCheckbox = document.getElementById('remind-me-checkbox');
-                        const isPersistent = remindMeCheckbox ? remindMeCheckbox.checked : false;
-
-                        localStorage.setItem('neuroNestUser', JSON.stringify({ username, persistent: isPersistent }));
-                        
-                        updateAuthUI();
-                        closeModal();
-                        // No longer redirect to home; stay on the current tab
-                    } else {
-                        // Successful Registration: switch to login mode
-                        isRegisterMode = false;
-                        openAuthModal();
-                    }
-                } else {
-                    authMessage.style.color = 'red';
-                    authMessage.textContent = data.message || 'An error occurred.';
-                }
-            } catch (error) {
-                authMessage.style.color = 'red';
-                authMessage.textContent = 'Network error or server unreachable.';
-                console.error('Auth error:', error);
-            }
-        }
-
-        function handleLogout() {
-            isAuthenticated = false;
-            currentUsername = null;
-            localStorage.removeItem('neuroNestUser');
-            updateAuthUI();
-            closeModal();
-            // No longer redirect to home; stay on the current tab
-        }
-
-        function openProfileModal() {
-            const content = `
-                <div class="profile-modal-content">
-                    <h2>Welcome, ${currentUsername}!</h2>
-                    <p>You are currently logged in.</p>
-                    <button id="logout-modal-btn" class="stop-activity-btn">Logout</button>
-                </div>
-            `;
-            openModal(content);
-            document.getElementById('logout-modal-btn').addEventListener('click', handleLogout);
-        }
+    function initializeAccountTab() {
+        const authToggleModalBtn = document.getElementById('auth-toggle-modal-btn');
+        const profileBtn = document.getElementById('profile-btn');
 
         if (authToggleModalBtn) authToggleModalBtn.addEventListener('click', () => openAuthModal(false));
         if (profileBtn) profileBtn.addEventListener('click', openProfileModal);
@@ -551,6 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProgressStats(progress);
         renderBadges(progress);
         renderUsageChart(progress);
+        renderHighScores(progress);
+        renderPendingTasks(); // NEW: Render pending tasks
         updateMascotMessage(progress);
 
         // Add listener for Badge FAQ button
@@ -560,6 +578,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 openModal(getBadgeFAQContent());
             });
         }
+    }
+
+    function renderPendingTasks() {
+        const tasksContainer = document.getElementById('pending-tasks-container');
+        if (!tasksContainer) return;
+
+        // getTasks is defined later (line 1387) and returns all tasks
+        const tasks = getTasks().filter(task => !task.completed).sort((a, b) => (a.time > b.time) ? 1 : -1);
+        
+        if (tasks.length === 0) {
+            tasksContainer.innerHTML = '<p class="empty-state-dashboard">All missions complete! Time for a break.</p>';
+            return;
+        }
+
+        // Display up to 5 pending tasks
+        const taskListHtml = tasks.slice(0, 5).map(task => `
+            <li>
+                <span class="task-text">${task.text}</span>
+                <span class="task-time">${task.time}</span>
+            </li>
+        `).join('');
+
+        tasksContainer.innerHTML = `<ul>${taskListHtml}</ul>`;
     }
 
     function updateMascotMessage(progress) {
@@ -667,71 +708,161 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderHighScores(progress) {
+        const highScoresContainer = document.getElementById('high-scores-container');
+        if (!highScoresContainer) return;
+
+        let highScoresHtml = '<h4>Game High Scores:</h4><ul>';
+        for (const game in progress.highScores) {
+            const gameName = game.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()); // Format game name
+            highScoresHtml += `<li><strong>${gameName}:</strong> ${progress.highScores[game]}</li>`;
+        }
+        highScoresHtml += '</ul>';
+
+        // Find highest tasks completed in a day
+        let maxTasksCompletedInDay = 0;
+        progress.usageHistory.forEach(entry => {
+            if (entry.completed > maxTasksCompletedInDay) {
+                maxTasksCompletedInDay = entry.completed;
+            }
+        });
+        highScoresHtml += `<h4>Daily Task Master:</h4><ul><li><strong>Most Tasks Completed in a Day:</strong> ${maxTasksCompletedInDay}</li></ul>`;
+
+        highScoresContainer.innerHTML = highScoresHtml;
+    }
+ 
     // --- Music Player Logic ---
     let currentAudio = null;
     let isPlaying = false;
 
-    function initializeMusicPlayer() {
+    function playMusic(track) {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        
+        // NOTE: Assuming audio files are in the root directory
+        currentAudio = new Audio(track);
+        currentAudio.loop = true;
         const toggleBtn = document.getElementById('toggle-music-btn');
-        const trackSelect = document.getElementById('music-track-select');
+        
+        currentAudio.play().then(() => {
+            isPlaying = true;
+            if (toggleBtn) toggleBtn.textContent = 'Pause';
+        }).catch(e => {
+            console.error("Music playback failed:", e);
+            if (toggleBtn) toggleBtn.textContent = 'Error';
+            isPlaying = false;
+        });
+    }
 
-        if (!toggleBtn || !trackSelect) return;
+    function stopMusic() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        isPlaying = false;
+        const toggleBtn = document.getElementById('toggle-music-btn');
+        if (toggleBtn) toggleBtn.textContent = 'Play';
+    }
 
-        toggleBtn.addEventListener('click', () => {
-            if (isPlaying) {
-                stopMusic();
-            } else {
-                playMusic(trackSelect.value);
-            }
+    function initializeMusicTileListeners() {
+        const musicTiles = modalBody.querySelectorAll('.music-tile');
+        const currentTrackNameEl = document.getElementById('current-track-name');
+        const currentTrackCategoryEl = document.getElementById('current-track-category');
+        const toggleBtn = document.getElementById('toggle-music-btn');
+
+        musicTiles.forEach(tile => {
+            tile.addEventListener('click', (e) => {
+                const trackId = e.currentTarget.dataset.trackId;
+                const category = e.currentTarget.dataset.category;
+                const trackName = e.currentTarget.querySelector('h4').textContent;
+
+                // Update UI
+                currentTrackNameEl.textContent = trackName;
+                currentTrackCategoryEl.textContent = category;
+                
+                // Highlight active tile
+                musicTiles.forEach(t => t.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+
+                // Play music
+                playMusic(trackId);
+            });
         });
 
-        trackSelect.addEventListener('change', () => {
-            if (isPlaying) {
-                playMusic(trackSelect.value); // Automatically switch and play new track
-            }
-        });
-
-        function playMusic(track) {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
-            
-            // NOTE: Assuming audio files are in the root directory
-            currentAudio = new Audio(track);
-            currentAudio.loop = true;
-            currentAudio.play().then(() => {
-                isPlaying = true;
-                toggleBtn.textContent = 'Pause';
-            }).catch(e => {
-                console.error("Music playback failed:", e);
-                toggleBtn.textContent = 'Error';
-                isPlaying = false;
+        // Ensure play/pause button works after initialization
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    stopMusic();
+                } else {
+                    // If nothing is selected, default to the first track
+                    const firstTrack = modalBody.querySelector('.music-tile');
+                    if (firstTrack) {
+                        firstTrack.click();
+                    }
+                }
             });
         }
+    }
 
-        function stopMusic() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-            }
-            isPlaying = false;
-            toggleBtn.textContent = 'Play';
+    function initializeMusicScroll() {
+        const scrollContainer = modalBody.querySelector('#music-tile-list');
+        const scrollUpBtn = modalBody.querySelector('#scroll-up-music-btn');
+        const scrollDownBtn = modalBody.querySelector('#scroll-down-music-btn');
+        const scrollAmount = 200; // Scroll by 200px
+
+        if (scrollContainer && scrollUpBtn && scrollDownBtn) {
+            scrollUpBtn.addEventListener('click', () => {
+                scrollContainer.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+            });
+            scrollDownBtn.addEventListener('click', () => {
+                scrollContainer.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+            });
         }
+    }; // Added semicolon here
+
+    const MUSIC_TRACKS = [
+        { id: 'music/SOOTHING.mp3', name: 'Soothing Melodies', category: 'SOOTHING', icon: '☁️', description: 'Calm your mind with gentle melodies.' },
+        { id: 'music/FOCUS.mp3', name: 'Focus Flow', category: 'FOCUS', icon: '🎧', description: 'Instrumental tracks for concentration.' },
+        { id: 'music/ENERGY.mp3', name: 'Uplifting Energy', category: 'ENERGY', icon: '⚡', description: 'Boost your mood and energy levels.' },
+        { id: 'nature_sounds.mp3', name: 'Nature Sounds', category: 'NATURE', icon: '🌳', description: 'Relax with ambient sounds like rain or forest.' }
+    ];
+
+    function generateMusicTiles() {
+        return MUSIC_TRACKS.map(track => `
+            <button class="game-tile-card music-tile" data-category="${track.category}" data-track-id="${track.id}">
+                <span class="game-tile-icon">${track.icon}</span>
+                <h4>${track.name}</h4>
+                <p>${track.description}</p>
+            </button>
+        `).join('');
     }
 
     // --- Activity Modal Content Definitions ---
     const activityModalContent = {
         music: `
             <div class="activity-modal-content music-section">
-                <h3>Soothing Sounds</h3>
-                <p>Listen to calming music or nature sounds to help you focus or relax.</p>
+                <h3>Music Library</h3>
+                <button id="close-music-modal" class="close-modal">&times;</button>
+                <p>Choose a mood to find the perfect track.</p>
+                
+                <div class="music-scroll-controls">
+                    <button id="scroll-up-music-btn" class="scroll-nav-btn up">▲</button>
+                    <button id="scroll-down-music-btn" class="scroll-nav-btn down">▼</button>
+                </div>
+
                 <div id="music-player-controls">
-                    <select id="music-track-select">
-                        <option value="soft_tune.mp3">Soft Tune (Focus)</option>
-                        <option value="nature_sounds.mp3">Nature Sounds (Relax)</option>
-                    </select>
-                    <button id="toggle-music-btn">Play</button>
+                    <div id="current-track-info">
+                        <h4>Now Playing: <span id="current-track-name">Select a Track</span></h4>
+                        <p>Category: <span id="current-track-category">N/A</span></p>
+                    </div>
+                    <button id="toggle-music-btn" class="stop-activity-btn">Play</button>
+                </div>
+
+                <div class="game-tile-list" id="music-tile-list">
+                    ${generateMusicTiles()}
                 </div>
             </div>
         `,
@@ -846,7 +977,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 openModal(activityModalContent[category], false, false); // It's not a game, so this should be false
 
                 if (category === 'music') {
-                    initializeMusicPlayer();
+                    initializeMusicTileListeners();
+                    initializeMusicScroll();
+                    // Add listener for the new music modal close button
+                    const closeMusicBtn = modalBody.querySelector('#close-music-modal');
+                    if (closeMusicBtn) {
+                        closeMusicBtn.addEventListener('click', closeModal);
+                    }
                 } else if (category === 'exercises') {
                     // Initialize exercise listeners inside the modal
                     const startBreathingBtn = modalBody.querySelector('#start-breathing-btn');
@@ -1438,20 +1575,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 option.classList.add('selected');
 
                 const mood = option.getAttribute('data-mood');
-                const activities = suggestedActivities[mood];
+                const rec = suggestedActivities[mood];
                 
-                const exercise = activities.exercises[Math.floor(Math.random() * activities.exercises.length)];
-                const game = activities.games[Math.floor(Math.random() * activities.games.length)];
-                const content = activities.content[Math.floor(Math.random() * activities.content.length)];
-
                 suggestedActivitiesContainer.innerHTML = `
-                    <h4>Here are a few ideas for you:</h4>
+                    <h4>Your Personalized Activities:</h4>
                     <div class="recommendation-cards">
-                        <div class="rec-card"><strong>Exercise:</strong> ${exercise}</div>
-                        <div class="rec-card"><strong>Game:</strong> ${game}</div>
-                        <div class="rec-card"><strong>Activity:</strong> ${content}</div>
+                        <button class="rec-card rec-game" data-type="game" data-id="${rec.game.id}">
+                            <strong>Game:</strong> ${rec.game.name}
+                        </button>
+                        <button class="rec-card rec-music" data-type="music" data-id="${rec.music.id}" data-name="${rec.music.name}">
+                            <strong>Music:</strong> ${rec.music.name}
+                        </button>
+                        <button class="rec-card rec-exercise" data-type="exercise" data-id="${rec.exercise.id}">
+                            <strong>Exercise:</strong> ${rec.exercise.name}
+                        </button>
                     </div>
                 `;
+
+                // Add listeners for the new recommendation cards
+                suggestedActivitiesContainer.querySelectorAll('.rec-card').forEach(card => {
+                    card.addEventListener('click', handleRecommendationClick);
+                });
             });
         });
 
@@ -1486,6 +1630,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    function handleRecommendationClick(e) {
+        const card = e.currentTarget;
+        const type = card.dataset.type;
+        const id = card.dataset.id;
+
+        if (type === 'game') {
+            initializeGameInModal(id);
+        } else if (type === 'music') {
+            // Open the music modal first
+            openModal(activityModalContent.music, false, false);
+            initializeMusicTileListeners();
+            initializeMusicScroll();
+            
+            // Simulate click on the corresponding tile to start playback
+            const musicTile = modalBody.querySelector(`.music-tile[data-track-id="${id}"]`);
+            if (musicTile) {
+                // Need a slight delay to ensure listeners are attached and modal is fully rendered
+                setTimeout(() => {
+                    musicTile.click();
+                }, 100);
+            }
+        } else if (type === 'exercise') {
+            if (id === 'breathing') {
+                startDeepBreathing();
+            } else if (id === 'meditation') {
+                startMeditation(5); // Default to 5 minutes
+            } else if (id === 'stretch') {
+                startQuickStretch();
+            } else if (id === 'listening') {
+                startMindfulListening();
+            } else if (id === 'bodyscan') {
+                startBodyScan();
+            } else if (id === 'tapping') {
+                startTapping();
+            }
+        }
     }
 
     function openModal(content, isChatbot = false, isGame = false) {
